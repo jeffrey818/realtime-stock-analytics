@@ -10,6 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+# For .env
+from dotenv import load_dotenv
+load_dotenv()
+# For .env
+
 from pathlib import Path
 import os
 
@@ -39,6 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "rest_framework",
+    'django_celery_beat',
+    'stocks',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -132,3 +140,14 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+ASGI_APPLICATION = "stock_analytics.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("127.0.0.1", 6379)],  # Redis server address and port
+        },
+    },
+}
