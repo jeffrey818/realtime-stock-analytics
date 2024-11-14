@@ -1,5 +1,5 @@
-// src/components/StockUpdates.tsx
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface StockData {
     symbol: string;
@@ -7,30 +7,35 @@ interface StockData {
     timestamp: string;
 }
 
+interface PredictionData {
+    predicted_price: number;
+    prediction_date: string;
+}
+
 const StockUpdates: React.FC<{ symbol: string }> = ({ symbol }) => {
     const [stockData, setStockData] = useState<StockData[]>([]);
+    const [prediction, setPrediction] = useState<PredictionData | null>(null);
 
     useEffect(() => {
-        // Define the WebSocket URL (adjust the host/port if necessary)
+        // WebSocket connection for real-time updates
         const socket = new WebSocket(`ws://localhost:8001/ws/stocks/${symbol}/`);
-
-        // Handle incoming messages
         socket.onmessage = (event) => {
-            console.log('Message from server:', event.data);
             const data = JSON.parse(event.data);
-            console.log(data);
-            
             setStockData((prevData) => [...prevData, data]);
         };
-
-        socket.onopen = () => {
-            console.log('WebSocket connection opened');
-          };
-
-        // Close the socket when the component is unmounted
         return () => {
             socket.close();
         };
+    }, [symbol]);
+
+    useEffect(() => {
+        // Fetch prediction data from the backend
+        axios.get(`http://localhost:8000/predict/${symbol}/`)
+            .then((response) => {
+                console.log(response);
+                
+                setPrediction(response.data)})
+            .catch((error) => console.error("Error fetching prediction:", error));
     }, [symbol]);
 
     return (
@@ -54,6 +59,12 @@ const StockUpdates: React.FC<{ symbol: string }> = ({ symbol }) => {
                     ))}
                 </tbody>
             </table>
+            {prediction && (
+                <div style={{ marginTop: '20px' }}>
+                    <h3>Predicted Price for {prediction.prediction_date}:</h3>
+                    <p>${prediction.predicted_price}</p>
+                </div>
+            )}
         </div>
     );
 };
